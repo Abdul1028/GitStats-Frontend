@@ -32,6 +32,7 @@ import {
   YAxis,
   LabelList,
   CartesianGrid,
+  Sector,
 } from 'recharts';
 import { formatDistanceToNow } from 'date-fns'; // For relative time formatting
 import CalendarHeatmap from 'react-calendar-heatmap';
@@ -341,9 +342,9 @@ export default function Home() {
           .reverse();
 
       const config = {
-          stars: {
+          stars: { 
               label: "Stars",
-              color: "var(--color-stars)"
+              color: "oklch(0.488 0.243 264.376)" 
           },
       } satisfies ChartConfig;
       return { repoChartData: sortedData, repoChartConfig: config };
@@ -362,7 +363,7 @@ export default function Home() {
       const config = {
           forks: {
               label: "Forks",
-              color: "var(--color-forks)"
+              color: "oklch(0.696 0.17 162.48)"
           },
       } satisfies ChartConfig;
       return { topForksChartData: sortedData, topForksChartConfig: config };
@@ -794,15 +795,12 @@ export default function Home() {
                   <h2 className="text-2xl font-semibold mb-4 text-center">Language Usage</h2>
                   <Card className="bg-gray-800 border-gray-700 text-white p-4 flex flex-col items-center">
                     <CardContent className="w-full h-[250px] p-0 mt-4">
-                      {/* Pass prepared config here */}
                       <ChartContainer config={languageChartConfig} className="w-full h-full aspect-square mx-auto">
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             <ChartTooltip
                               cursor={false}
-                              content={<ChartTooltipContent 
-                                        indicator="dot"
-                                      />}
+                              content={<ChartTooltipContent indicator="dot" hideLabel />}
                             />
                             <Pie
                               data={languageChartData}
@@ -812,6 +810,10 @@ export default function Home() {
                               cy="50%"
                               outerRadius={90}
                               innerRadius={50}
+                              strokeWidth={2}
+                              activeShape={({ outerRadius = 0, ...props }: any) => (
+                                <Sector {...props} outerRadius={outerRadius + 6} />
+                              )}
                             >
                               {languageChartData.map((entry) => (
                                 <Cell key={`cell-${entry.language}`} fill={entry.fill} name={entry.language}/>
@@ -852,12 +854,12 @@ export default function Home() {
                                             cursor={false} 
                                             content={<ChartTooltipContent indicator="line" hideLabel />} 
                                         />
-                                        <Bar dataKey="stars" layout="vertical" radius={4} fill="var(--color-stars)"> 
+                                        <Bar dataKey="stars" layout="vertical" radius={6} fill="oklch(0.488 0.243 264.376)"> 
                                             <LabelList 
                                                 dataKey="stars"
                                                 position="right" 
                                                 offset={8} 
-                                                className="fill-foreground" 
+                                                fill="#FFFFFF"
                                                 fontSize={11}
                                             />
                                         </Bar>
@@ -896,7 +898,7 @@ export default function Home() {
                                             cursor={false} 
                                             content={<ChartTooltipContent indicator="line" hideLabel />} 
                                         />
-                                        <Bar dataKey="forks" layout="vertical" radius={4} fill="var(--color-forks)">
+                                        <Bar dataKey="forks" layout="vertical" radius={6} fill="oklch(0.696 0.17 162.48)">
                                             <LabelList 
                                                 dataKey="forks"
                                                 position="right" 
@@ -925,16 +927,20 @@ export default function Home() {
                           <PieChart>
                             <ChartTooltip
                               cursor={false}
-                              content={<ChartTooltipContent indicator="dot" hideLabel nameKey="type" />} // Show type in tooltip
+                              content={<ChartTooltipContent indicator="dot" hideLabel nameKey="type" />}
                             />
                             <Pie
                               data={eventTypeChartData}
                               dataKey="count"
-                              nameKey="type" // Use 'type' for labels/tooltips
+                              nameKey="type" 
                               cx="50%"
                               cy="50%"
-                              outerRadius={80} // Slightly smaller radius
+                              outerRadius={80}
                               innerRadius={40}
+                              strokeWidth={2}
+                              activeShape={({ outerRadius = 0, ...props }: any) => (
+                                <Sector {...props} outerRadius={outerRadius + 6} />
+                              )}
                             >
                               {eventTypeChartData.map((entry) => (
                                 <Cell key={`cell-${entry.type}`} fill={entry.fill} name={entry.type}/>
@@ -974,11 +980,11 @@ export default function Home() {
                                       />
                                       <ChartTooltip 
                                           cursor={false} 
-                                          content={<ChartTooltipContent indicator="line" hideLabel />} // Basic tooltip
+                                          content={<ChartTooltipContent indicator="line" hideLabel />}
                                       />
                                       <Bar dataKey="events" layout="vertical" radius={4} fill="var(--color-event-activity)">
                                           <LabelList 
-                                              dataKey="events" // Show event count
+                                              dataKey="events"
                                               position="right" 
                                               offset={8} 
                                               fill="#FFFFFF" 
@@ -1027,7 +1033,7 @@ export default function Home() {
                                 offset={6}
                                 fill="#FFFFFF"
                                 fontSize={11}
-                                formatter={(value: number) => value > 0 ? value : ''} // Hide 0 labels
+                                formatter={(value: number) => value > 0 ? value : ''}
                               />
                             </Bar>
                           </BarChart>
@@ -1072,7 +1078,7 @@ export default function Home() {
                                 offset={6}
                                 fill="#FFFFFF"
                                 fontSize={11}
-                                formatter={(value: number) => value > 0 ? value : ''} // Hide 0 labels
+                                formatter={(value: number) => value > 0 ? value : ''}
                               />
                             </Bar>
                           </BarChart>
@@ -1092,12 +1098,12 @@ export default function Home() {
                 <h2 className="text-2xl font-semibold mb-4 text-center">
                     {contributionData.contributionCalendar.totalContributions} contributions in the last year
                 </h2>
-                <Card className="bg-gray-800 border-gray-700 text-white p-6 overflow-x-auto"> {/* Added overflow */} 
+                <Card className="bg-gray-800 border-gray-700 text-white p-6 overflow-x-auto">
                     <CalendarHeatmap
-                        startDate={startDate} // Approx start date
-                        endDate={endDate} // Today
-                        values={heatmapValues} // Array of { date: string, count: number }
-                        classForValue={getClassForValue} // Use the adjusted function
+                        startDate={startDate}
+                        endDate={endDate}
+                        values={heatmapValues}
+                        classForValue={getClassForValue}
                         tooltipDataAttrs={(value: ReactCalendarHeatmapValue<string> | undefined): any => { 
                             const dateStr = value?.date ? new Date(value.date).toDateString() : 'Unknown date';
                             const count = value?.date ? (heatmapValueMap.get(value.date) ?? 0) : 0;
