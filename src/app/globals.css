@@ -41,6 +41,12 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --color-stars: hsl(var(--chart-1));
+  --color-forks: hsl(var(--chart-2));
+  --color-contributions: hsl(var(--chart-3));
+  --color-event-activity: hsl(var(--chart-4));
+  --color-repo-age: hsl(var(--chart-5));
+  /* --color-event-hour: hsl(var(--chart-5)); */ /* Remove unused color */
 }
 
 :root {
@@ -63,11 +69,11 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --chart-1: 220 70% 50%;
+  --chart-2: 160 60% 45%;
+  --chart-3: 40 80% 55%;
+  --chart-4: 280 75% 60%;
+  --chart-5: 340 85% 65%;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -119,4 +125,38 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Add styles for react-calendar-heatmap */
+.react-calendar-heatmap .color-empty {
+  fill: hsl(var(--muted)); /* Use theme color for empty */
+}
+.react-calendar-heatmap .color-scale-0 {
+  fill: #c6e48b; /* Lightest green */
+}
+.react-calendar-heatmap .color-scale-1 {
+  fill: #7bc96f;
+}
+.react-calendar-heatmap .color-scale-2 {
+  fill: #239a3b;
+}
+.react-calendar-heatmap .color-scale-3 {
+  fill: #196127; /* Darkest green */
+}
+
+/* Tooltip styles */
+.react-tooltip {
+  background-color: hsl(var(--popover)) !important;
+  color: hsl(var(--popover-foreground)) !important;
+  border-radius: var(--radius) !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+  box-shadow: var(--shadow-md) !important; /* Assuming shadow var exists */
+  opacity: 1 !important;
+  z-index: 9999 !important;
+  /* Remove default arrow if desired */
+}
+.react-tooltip::after {
+  /* display: none !important; */
 }
