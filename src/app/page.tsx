@@ -828,7 +828,7 @@ export default function Home() {
                 <Input
                     type="text"
                     value={username} 
-                    onChange={(e) => setUsername(e.target.value)} 
+                    onChange={(e) => setUsername(e.target.value)}   
                     placeholder="e.g., octocat"
                     className="h-12 text-lg px-4 flex-grow bg-gray-700 border-gray-600 placeholder-gray-500 focus:ring-offset-gray-900 focus:border-teal-500 focus:ring-teal-500" 
                 />
@@ -872,7 +872,7 @@ export default function Home() {
             
           </div>
         )}
-
+        
         {/* --- Display fetched data (only when not loading and userData exists) --- */}
         {!loading && userData && (
           <>
