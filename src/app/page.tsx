@@ -40,6 +40,7 @@ import type { ReactCalendarHeatmapValue } from 'react-calendar-heatmap'; // Impo
 import { Tooltip as ReactTooltip } from 'react-tooltip'; // Import tooltip component
 import 'react-calendar-heatmap/dist/styles.css'; // Import default heatmap styles
 import { signIn, signOut, useSession } from "next-auth/react";
+import DevDocsSection from '@/components/DevDocsSection';
 
 interface GitHubUser {
   login: string;
@@ -796,7 +797,6 @@ export default function Home() {
         {/* --- Initial Hero/Welcome Section & Input --- */}
         {!loading && !userData && !error && (
           <div className="text-center py-12 sm:py-16">
-            
             {/* --- Input Area Moved Up --- */}
             <p className="text-lg text-gray-400 mb-6">Enter a GitHub username below to get started:</p>
             <div className="flex gap-2 w-full max-w-lg mx-auto">
@@ -825,26 +825,28 @@ export default function Home() {
               </p>
             )}
 
-            {/* --- Title, Subtitle, and Discover Card Moved Down --- */}
-            {/* Added mt for spacing after input */}
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-4 mt-12 sm:mt-16">GitStats</h1> 
-            <p className="text-xl sm:text-2xl text-gray-400 mb-8">In-depth GitHub Profile Analysis</p>
-            
-            <Card className="w-full max-w-2xl mx-auto mb-10 bg-gray-800/50 border-gray-700/50 text-white">
-              <CardHeader>
-                 <CardTitle className="text-xl tracking-normal font-semibold">What you can discover:</CardTitle>
-              </CardHeader>
-              <CardContent className="text-gray-300 text-left space-y-2 px-6 pb-6">
-                  <ul className="list-disc list-outside pl-5 space-y-1 text-gray-400">
-                    <li>Visualize your programming <span className="text-teal-400 font-medium">language usage</span> across repositories.</li>
-                    <li>Identify your most popular projects by <span className="text-purple-400 font-medium">stars and forks</span>.</li>
-                    <li>Analyze your <span className="text-green-400 font-medium">contribution patterns</span> with a detailed heatmap.</li>
-                    <li>Uncover insights like coding streaks, busiest days, and repository age.</li>
-                    <li>Track your recent activity and event types.</li>
-                  </ul>
-              </CardContent>
-            </Card>
-            
+            {/* --- Responsive Discover + DevDocs Section --- */}
+            <div className="mt-12 sm:mt-16 flex flex-col lg:flex-row items-stretch justify-center gap-8 w-full max-w-5xl mx-auto">
+              <div className="flex-1 flex items-center">
+                <Card className="w-full max-w-2xl mx-auto mb-0 bg-gray-800/50 border-gray-700/50 text-white">
+                  <CardHeader>
+                     <CardTitle className="text-xl tracking-normal font-semibold">What you can discover:</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-gray-300 text-left space-y-2 px-6 pb-6">
+                      <ul className="list-disc list-outside pl-5 space-y-1 text-gray-400">
+                        <li>Visualize your programming <span className="text-teal-400 font-medium">language usage</span> across repositories.</li>
+                        <li>Identify your most popular projects by <span className="text-purple-400 font-medium">stars and forks</span>.</li>
+                        <li>Analyze your <span className="text-green-400 font-medium">contribution patterns</span> with a detailed heatmap.</li>
+                        <li>Uncover insights like coding streaks, busiest days, and repository age.</li>
+                        <li>Track your recent activity and event types.</li>
+                      </ul>
+                  </CardContent>
+                </Card>
+              </div>
+              <div className="flex-1 flex items-center">
+                <DevDocsSection />
+              </div>
+            </div>
           </div>
         )}
 
