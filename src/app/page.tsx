@@ -39,6 +39,7 @@ import CalendarHeatmap from 'react-calendar-heatmap';
 import type { ReactCalendarHeatmapValue } from 'react-calendar-heatmap'; // Import specific type
 import { Tooltip as ReactTooltip } from 'react-tooltip'; // Import tooltip component
 import 'react-calendar-heatmap/dist/styles.css'; // Import default heatmap styles
+import { signIn, signOut, useSession } from "next-auth/react";
 
 interface GitHubUser {
   login: string;
@@ -164,6 +165,12 @@ interface ProfileInsights {
     activeDays: number;
 }
 
+// Add a type for session to include accessToken
+interface SessionWithToken {
+  user?: any;
+  accessToken?: string;
+}
+
 export default function Home() {
   const [username, setUsername] = useState<string>('');
   const [userData, setUserData] = useState<GitHubUser | null>(null);
@@ -173,38 +180,13 @@ export default function Home() {
   const [contributionData, setContributionData] = useState<ContributionData | null>(null); // State for contributions
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [loggedInUser, setLoggedInUser] = useState<LoggedInUser | null>(null);
-  const [authLoading, setAuthLoading] = useState<boolean>(true); // Loading state for initial auth check
+  const { data: sessionData, status } = useSession();
+  const session = sessionData as SessionWithToken;
+  const accessToken = session?.accessToken;
+  const loggedInUser = session?.user || null;
+  const authLoading = status === "loading";
 
-  // Determine if we are showing data for the currently logged-in user
-  const isFetchingLoggedInUser = !!loggedInUser;
-  
-  // --- Check auth status on initial load --- 
-  useEffect(() => {
-    const checkAuth = async () => {
-      setAuthLoading(true);
-      try {
-        // Point fetch to the backend server and include credentials
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/me`, {
-          credentials: 'include' // Send cookies with the request
-        }); 
-        if (response.ok && response.status !== 204) { // 204 No Content means not logged in
-          const user: LoggedInUser = await response.json();
-          setLoggedInUser(user);
-        } else {
-          // Handle 401 or other non-ok statuses
-          console.log("Auth check failed or not logged in, status:", response.status);
-          setLoggedInUser(null);
-        }
-      } catch (error) {
-        console.error("Error checking auth status:", error);
-        setLoggedInUser(null);
-      } finally {
-        setAuthLoading(false);
-      }
-    };
-    checkAuth();
-  }, []); // Empty dependency array runs once on mount
+  console.log("hey: ",process.env.NEXT_PUBLIC_BACKEND_URL)
 
   const fetchData = async (fetchLoggedInUserData = false) => {
     
@@ -212,7 +194,7 @@ export default function Home() {
     const isFetchingSelf = fetchLoggedInUserData && loggedInUser;
     
     // Determine the target username
-    const targetUserLogin = isFetchingSelf ? loggedInUser.login : username;
+    const targetUserLogin = isFetchingSelf ? loggedInUser.name || loggedInUser.email : username;
 
     // Check if a target user is actually determined
     if (!targetUserLogin) {
@@ -242,7 +224,7 @@ export default function Home() {
         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/me` 
         : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/${targetUserLogin}`;
       const userResponse = await fetch(userUrl, {
-         credentials: isFetchingSelf ? 'include' : 'omit', 
+        headers: isFetchingSelf && accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       });
       if (!userResponse.ok || userResponse.status === 204) {
         const errorText = isFetchingSelf ? "Failed to fetch your logged-in user data" : `User not found or API error for ${targetUserLogin}`;
@@ -255,8 +237,8 @@ export default function Home() {
       const repoUrl = isFetchingSelf 
         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/repos` 
         : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/${targetUserLogin}/repos`;
-      const repoResponse = await fetch(repoUrl, { 
-          credentials: isFetchingSelf ? 'include' : 'omit',
+      const repoResponse = await fetch(repoUrl, {
+        headers: isFetchingSelf && accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
       });
       const repoJsonText = await repoResponse.text(); 
       console.log("Raw Repo JSON Text:", repoJsonText); 
@@ -277,7 +259,7 @@ export default function Home() {
       const langUrl = isFetchingSelf
         ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/languages` 
         : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/${targetUserLogin}/languages`;
-      const langResponse = await fetch(langUrl, { credentials: isFetchingSelf ? 'include' : 'omit' });
+      const langResponse = await fetch(langUrl, { headers: isFetchingSelf && accessToken ? { Authorization: `Bearer ${accessToken}` } : {} });
       if (langResponse.ok) {
           const langDataJson: LanguageStats = await langResponse.json();
           setLanguageStats(langDataJson);
@@ -290,7 +272,7 @@ export default function Home() {
       const eventsUrl = isFetchingSelf
           ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/events` 
           : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/${targetUserLogin}/events`;
-      const eventsResponse = await fetch(eventsUrl, { credentials: isFetchingSelf ? 'include' : 'omit' });
+      const eventsResponse = await fetch(eventsUrl, { headers: isFetchingSelf && accessToken ? { Authorization: `Bearer ${accessToken}` } : {} });
       if (eventsResponse.ok) {
           const eventsDataJson: GitHubEvent[] = await eventsResponse.json();
           setEvents(eventsDataJson);
@@ -302,7 +284,7 @@ export default function Home() {
       // Fetch Contribution Data ONLY if fetching self
       if (isFetchingSelf) { 
         const contribResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/contributions`, {
-            credentials: 'include'
+          headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
         });
         if (!contribResponse.ok) {
             console.warn(`Contribution fetch warning: Status ${contribResponse.status}`);
@@ -770,11 +752,6 @@ export default function Home() {
 
   }, [contributionData]);
 
-  const handleLogout = () => {
-    // Point to the backend logout URL
-    window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/logout`; 
-  };
-
   return (
     <main className="flex min-h-screen flex-col items-center p-6 sm:p-12 bg-gray-900 text-white">
       {/* Container with max-width and centered */}
@@ -787,25 +764,23 @@ export default function Home() {
           
           {/* Login/User Info Area */}
           <div className="flex items-center gap-3 min-h-[40px]">
-            {authLoading === true ? (
+            {authLoading ? (
               <span className="text-sm text-gray-500">Checking auth...</span>
-            ) : loggedInUser !== null ? (
+            ) : loggedInUser ? (
               <>
-                <span className="text-sm">Logged in as <strong className="text-white">{loggedInUser.login}</strong></span>
-                {loggedInUser.avatar_url &&
-                  <Image src={loggedInUser.avatar_url} alt="User Avatar" width={32} height={32} className="rounded-full" />
-                }
-                <Button size="sm" className="bg-teal-600 hover:bg-teal-700" onClick={handleLogout}>Logout</Button>
+                <span className="text-sm">Logged in as <strong className="text-white">{loggedInUser.name || loggedInUser.email}</strong></span>
+                {loggedInUser.image && (
+                  <Image src={loggedInUser.image} alt="User Avatar" width={32} height={32} className="rounded-full" />
+                )}
+                <Button size="sm" className="bg-teal-600 hover:bg-teal-700" onClick={() => signOut()}>Logout</Button>
               </>
             ) : (
-              <Button size="sm" className="bg-teal-600 hover:bg-teal-700 flex items-center gap-2" asChild> 
-                <a href={`${process.env.NEXT_PUBLIC_BACKEND_URL}/oauth2/authorization/github`}>
-                  {/* GitHub Icon SVG */}
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
-                    <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.11-.83-.16 0-.24.05-.02.13.28.08.62.61.78.83.26.31.75.75 1.88.75.23 0 .44-.01.66-.05 0 .46.01.9.01 1.18 0 .21-.15.46-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z" />
-                  </svg>
-                  Login with GitHub
-                </a>
+              <Button size="sm" className="bg-teal-600 hover:bg-teal-700 flex items-center gap-2" onClick={() => signIn("github")}> 
+                {/* GitHub Icon SVG */}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+                  <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.11-.83-.16 0-.24.05-.02.13.28.08.62.61.78.83.26.31.75.75 1.88.75.23 0 .44-.01.66-.05 0 .46.01.9.01 1.18 0 .21-.15.46-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z" />
+                </svg>
+                Login with GitHub
               </Button>
             )}
           </div>
@@ -828,7 +803,7 @@ export default function Home() {
                 <Input
                     type="text"
                     value={username} 
-                    onChange={(e) => setUsername(e.target.value)}   
+                    onChange={(e) => setUsername(e.target.value)} 
                     placeholder="e.g., octocat"
                     className="h-12 text-lg px-4 flex-grow bg-gray-700 border-gray-600 placeholder-gray-500 focus:ring-offset-gray-900 focus:border-teal-500 focus:ring-teal-500" 
                 />
@@ -842,7 +817,7 @@ export default function Home() {
             </div>
             {loggedInUser && (
               <p className="mt-4 text-gray-500">
-                Welcome back, <strong className="text-gray-300">{loggedInUser.login}</strong>! Click \
+                Welcome back, <strong className="text-gray-300">{loggedInUser.name || loggedInUser.email}</strong>! Click \
                 <Button variant="link" className="p-0 px-1 h-auto align-baseline text-teal-400 hover:text-teal-300" onClick={() => fetchData(true)}>
                   Fetch My Stats
                 </Button> \
@@ -872,7 +847,7 @@ export default function Home() {
             
           </div>
         )}
-        
+
         {/* --- Display fetched data (only when not loading and userData exists) --- */}
         {!loading && userData && (
           <>
@@ -891,7 +866,7 @@ export default function Home() {
                     {userData.avatar_url && (
                       <Image
                         src={userData.avatar_url}
-                        alt={`${userData.login}'s avatar`}
+                        alt={`${userData.name || userData.login}'s avatar`}
                         width={128}
                         height={128}
                         className="rounded-full mb-4 border-4 border-gray-600"
