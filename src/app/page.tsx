@@ -342,40 +342,36 @@ export default function Home() {
   }, [languageStats]); // Dependency array
 
   const { repoChartData, repoChartConfig } = useMemo(() => {
-      const TOP_N_REPOS = 7;
-      const sortedData = [...repos]
-          .filter(repo => repo.stargazers_count > 0)
-          .sort((a, b) => b.stargazers_count - a.stargazers_count)
-          .slice(0, TOP_N_REPOS)
-          .map(repo => ({ name: repo.name, stars: repo.stargazers_count }))
-          .reverse();
-
-      const config = {
-          stars: { 
-              label: "Stars",
-              color: "oklch(0.488 0.243 264.376)" 
-          },
-      } satisfies ChartConfig;
-      return { repoChartData: sortedData, repoChartConfig: config };
+    const TOP_N_REPOS = 7;
+    const sortedData = [...repos]
+        .filter(repo => repo.stargazers_count > 0)
+        .sort((a, b) => b.stargazers_count - a.stargazers_count) // Most at top
+        .slice(0, TOP_N_REPOS)
+        .map(repo => ({ name: repo.name, stars: repo.stargazers_count }));
+    const config = {
+        stars: { 
+            label: "Stars",
+            color: "oklch(0.488 0.243 264.376)" 
+        },
+    } satisfies ChartConfig;
+    return { repoChartData: sortedData, repoChartConfig: config };
   }, [repos]);
 
-  // --- Prepare data for Top Forks Bar Chart --- 
+  // --- Top Repositories by Forks ---
   const { topForksChartData, topForksChartConfig } = useMemo(() => {
-      const TOP_N_FORKS = 7;
-      const sortedData = [...repos]
-          .filter(repo => repo.forks_count > 0)
-          .sort((a, b) => b.forks_count - a.forks_count)
-          .slice(0, TOP_N_FORKS)
-          .map(repo => ({ name: repo.name, forks: repo.forks_count }))
-          .reverse();
-
-      const config = {
-          forks: {
-              label: "Forks",
-              color: "oklch(0.696 0.17 162.48)"
-          },
-      } satisfies ChartConfig;
-      return { topForksChartData: sortedData, topForksChartConfig: config };
+    const TOP_N_FORKS = 7;
+    const sortedData = [...repos]
+        .filter(repo => repo.forks_count > 0)
+        .sort((a, b) => b.forks_count - a.forks_count) // Most at top
+        .slice(0, TOP_N_FORKS)
+        .map(repo => ({ name: repo.name, forks: repo.forks_count }));
+    const config = {
+        forks: {
+            label: "Forks",
+            color: "oklch(0.696 0.17 162.48)"
+        },
+    } satisfies ChartConfig;
+    return { topForksChartData: sortedData, topForksChartConfig: config };
   }, [repos]);
 
   // --- Calculate Profile Insights --- 
@@ -753,6 +749,25 @@ export default function Home() {
 
   }, [contributionData]);
 
+  // Custom tick renderer for YAxis: render repo names at a -35 degree angle
+  const renderRepoNameTick = (props: any) => {
+    const { x, y, payload } = props;
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          textAnchor="end"
+          fontSize={14}
+          fontWeight={500}
+          fill="hsl(var(--muted-foreground))"
+          transform="rotate(-35)"
+          dy={4}
+        >
+          {payload.value}
+        </text>
+      </g>
+    );
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center p-6 sm:p-12 bg-gray-900 text-white">
       {/* Container with max-width and centered */}
@@ -1123,9 +1138,9 @@ export default function Home() {
                                             type="category"
                                             tickLine={false}
                                             axisLine={false}
-                                            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                                            tickMargin={5}
-                                            width={80}
+                                            tick={renderRepoNameTick}
+                                            tickMargin={8}
+                                            width={120}
                                         />
                                         <ChartTooltip
                                             cursor={false}
@@ -1166,9 +1181,9 @@ export default function Home() {
                                             type="category"
                                             tickLine={false}
                                             axisLine={false}
-                                            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
-                                            tickMargin={5}
-                                            width={80}
+                                            tick={renderRepoNameTick}
+                                            tickMargin={8}
+                                            width={120}
                                         />
                                         <ChartTooltip
                                             cursor={false}
@@ -1248,7 +1263,7 @@ export default function Home() {
                                               type="category"
                                               tickLine={false}
                                               axisLine={false}
-                                              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                                              tick={renderRepoNameTick}
                                               tickMargin={5}
                                               width={150}
                                           />
