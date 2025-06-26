@@ -84,6 +84,17 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
+/* Custom style for react-tooltip legend */
+#legend-tooltip[data-tooltip] {
+  --rt-bg: #1818eb !important;      /* Tailwind gray-900 */
+  --rt-color: #1650c6 !important;   /* Tailwind gray-100 */
+  --rt-padding: 8px 16px !important;
+  --rt-radius: 8px !important;
+  --rt-font-size: 1rem !important;
+  --rt-shadow: 0 4px 24px 0 rgba(0,0,0,0.25) !important;
+  z-index: 9999;
+}
+
 .dark {
   --background: #000;
   --foreground: #fff;
@@ -159,4 +170,21 @@
 }
 .react-tooltip::after {
   /* display: none !important; */
+}
+
+.chart-legend-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 260px;
+  overflow-y: auto;
+  width: 100%;
+  min-width: 120px;
+}
+@media (max-width: 768px) {
+  .chart-legend-scroll {
+    max-height: 160px;
+    width: 100%;
+    min-width: 0;
+  }
 }
