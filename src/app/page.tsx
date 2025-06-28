@@ -192,6 +192,7 @@ export default function Home() {
   const [contributionData, setContributionData] = useState<ContributionData | null>(null); // State for contributions
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [personaData, setPersonaData] = useState<any>(null); // State for persona analysis
   const { data: sessionData, status } = useSession();
   const session = sessionData as SessionWithToken;
   const accessToken = session?.accessToken;
@@ -309,6 +310,27 @@ export default function Home() {
       } else {
         // Ensure contribution data is null if fetching other user
         setContributionData(null);
+      }
+
+      // Fetch Persona Analysis
+      const personaUrl = isFetchingSelf 
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/persona`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/${targetUserLogin}/persona`;
+      
+      try {
+        const personaResponse = await fetch(personaUrl, {
+          headers: isFetchingSelf && accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+        });
+        if (personaResponse.ok) {
+          const personaDataJson = await personaResponse.json();
+          setPersonaData(personaDataJson);
+        } else {
+          console.warn(`Persona fetch warning: Status ${personaResponse.status}`);
+          setPersonaData(null);
+        }
+      } catch (e) {
+        console.warn('Failed to fetch persona data:', e);
+        setPersonaData(null);
       }
 
     } catch (err: any) {
@@ -1005,6 +1027,428 @@ export default function Home() {
                               <p className="text-xs text-gray-500">(On active days)</p>
                           </div>
                       )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {/* --- Developer Persona Analysis Section --- */}
+            {userData && personaData && (
+              <div className="mb-12 w-full max-w-7xl mx-auto">
+                <h2 className="text-2xl font-semibold mb-4 text-center">Developer Persona Analysis</h2>
+                
+                {/* Primary Persona Hero Card */}
+                <div className="mb-8">
+                  <Card className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 border-purple-700/50 text-white">
+                    <CardContent className="p-8 text-center">
+                      <div className="flex items-center justify-center gap-4 mb-4">
+                        <span className="text-6xl">
+                          {personaData.primaryPersona === "Night Owl Coder" ? "🦉" :
+                           personaData.primaryPersona === "Early Bird Developer" ? "🌅" :
+                           personaData.primaryPersona === "Weekend Warrior" ? "🏃‍♂️" :
+                           personaData.primaryPersona === "9-to-5 Developer" ? "💼" :
+                           personaData.primaryPersona === "Bug Hunter" ? "🐛" :
+                           personaData.primaryPersona === "Feature Developer" ? "✨" :
+                           personaData.primaryPersona === "Code Gardener" ? "🌱" :
+                           personaData.primaryPersona === "Documentation Champion" ? "📚" :
+                           personaData.primaryPersona === "Open Source Contributor" ? "🌍" :
+                           personaData.primaryPersona === "Team Player" ? "👥" :
+                           personaData.primaryPersona === "Solo Developer" ? "🦅" : "👨‍💻"}
+                        </span>
+                        <div>
+                          <h3 className="text-3xl font-bold">{personaData.primaryPersona}</h3>
+                          <p className="text-gray-300">
+                            {personaData.primaryPersona === "Night Owl Coder" ? "You code best when the world sleeps" :
+                             personaData.primaryPersona === "Early Bird Developer" ? "You're most productive in the morning" :
+                             personaData.primaryPersona === "Weekend Warrior" ? "You code best when the world takes a break" :
+                             personaData.primaryPersona === "9-to-5 Developer" ? "You maintain a consistent work schedule" :
+                             personaData.primaryPersona === "Bug Hunter" ? "You excel at finding and fixing issues" :
+                             personaData.primaryPersona === "Feature Developer" ? "You love building new functionality" :
+                             personaData.primaryPersona === "Code Gardener" ? "You keep codebases clean and healthy" :
+                             personaData.primaryPersona === "Documentation Champion" ? "You ensure code is well-documented" :
+                             personaData.primaryPersona === "Open Source Contributor" ? "You're active in the open source community" :
+                             personaData.primaryPersona === "Team Player" ? "You thrive in collaborative environments" :
+                             personaData.primaryPersona === "Solo Developer" ? "You prefer working independently" : "You have a unique coding style"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex justify-center items-center gap-8">
+                        <div className="text-center">
+                          <p className="text-sm text-gray-400">Confidence</p>
+                          <p className="text-2xl font-bold text-green-400">{personaData.confidence.toFixed(1)}%</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-400">Peak Time</p>
+                          <p className="text-xl font-semibold">
+                            {personaData.timeAnalysis?.peakHour === 0 ? "12 AM" :
+                             personaData.timeAnalysis?.peakHour === 12 ? "12 PM" :
+                             personaData.timeAnalysis?.peakHour > 12 ? `${personaData.timeAnalysis.peakHour - 12} PM` :
+                             `${personaData.timeAnalysis?.peakHour} AM`}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm text-gray-400">Peak Day</p>
+                          <p className="text-xl font-semibold">
+                            {personaData.timeAnalysis?.peakDay === 0 ? "Sunday" :
+                             personaData.timeAnalysis?.peakDay === 1 ? "Monday" :
+                             personaData.timeAnalysis?.peakDay === 2 ? "Tuesday" :
+                             personaData.timeAnalysis?.peakDay === 3 ? "Wednesday" :
+                             personaData.timeAnalysis?.peakDay === 4 ? "Thursday" :
+                             personaData.timeAnalysis?.peakDay === 5 ? "Friday" : "Saturday"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Main Analysis Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                  
+                  {/* Time Analysis Card */}
+                  <Card className="bg-gray-800 border-gray-700 text-white">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <span className="text-2xl">⏰</span>
+                        Time Analysis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {/* Hour Distribution Chart */}
+                      <div>
+                        <h4 className="text-lg font-semibold mb-3">Hourly Activity Pattern</h4>
+                        <div className="grid grid-cols-12 gap-1 h-32">
+                          {Array.from({ length: 24 }, (_, i) => {
+                            const count = personaData.timeAnalysis?.hourDistribution?.[i] || 0;
+                            const maxCount = Math.max(...Object.values(personaData.timeAnalysis?.hourDistribution || {}).map(v => Number(v) || 0));
+                            const height = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                            return (
+                              <div
+                                key={i}
+                                className="bg-gray-700 rounded-sm flex items-end justify-center"
+                                style={{
+                                  height: `${Math.max(5, height)}%`,
+                                  backgroundColor: i === personaData.timeAnalysis?.peakHour ? '#10b981' : '#374151'
+                                }}
+                              >
+                                <span className="text-xs text-gray-400 -rotate-90 transform origin-center">
+                                  {i === 0 ? '12 AM' : i === 12 ? '12 PM' : i > 12 ? `${i-12} PM` : `${i} AM`}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Day of Week Distribution */}
+                      <div>
+                        <h4 className="text-lg font-semibold mb-3">Weekly Activity Pattern</h4>
+                        <div className="grid grid-cols-7 gap-2">
+                          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, i) => {
+                            const count = personaData.timeAnalysis?.dayOfWeekDistribution?.[i] || 0;
+                            const maxCount = Math.max(...Object.values(personaData.timeAnalysis?.dayOfWeekDistribution || {}).map(v => Number(v) || 0));
+                            const height = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                            return (
+                              <div key={day} className="text-center">
+                                <div
+                                  className="bg-gray-700 rounded-lg p-2 mb-1"
+                                  style={{
+                                    backgroundColor: i === personaData.timeAnalysis?.peakDay ? '#10b981' : '#374151',
+                                    height: `${Math.max(20, height)}px`
+                                  }}
+                                />
+                                <p className="text-xs text-gray-400">{day}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Time Persona Stats */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center p-3 bg-gray-700 rounded">
+                          <p className="text-sm text-gray-400">Time Persona</p>
+                          <p className="font-bold text-green-400">{personaData.timeAnalysis?.timePersona}</p>
+                        </div>
+                        <div className="text-center p-3 bg-gray-700 rounded">
+                          <p className="text-sm text-gray-400">Confidence</p>
+                          <p className="font-bold">{personaData.timeAnalysis?.timeConfidence.toFixed(1)}%</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Activity Analysis Card */}
+                  <Card className="bg-gray-800 border-gray-700 text-white">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <span className="text-2xl">🎯</span>
+                        Activity Analysis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {/* Activity Breakdown */}
+                      <div>
+                        <h4 className="text-lg font-semibold mb-3">Commit Activity Breakdown</h4>
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-red-500 rounded"></div>
+                              <span>Bug Fixes</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{personaData.activityAnalysis?.bugFixCount}</span>
+                              <span className="text-gray-400">
+                                ({personaData.activityAnalysis?.totalCommits > 0 ? 
+                                  ((personaData.activityAnalysis.bugFixCount / personaData.activityAnalysis.totalCommits) * 100).toFixed(0) : 0}%)
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                              <span>Features</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{personaData.activityAnalysis?.featureCount}</span>
+                              <span className="text-gray-400">
+                                ({personaData.activityAnalysis?.totalCommits > 0 ? 
+                                  ((personaData.activityAnalysis.featureCount / personaData.activityAnalysis.totalCommits) * 100).toFixed(0) : 0}%)
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-green-500 rounded"></div>
+                              <span>Refactors</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{personaData.activityAnalysis?.refactorCount}</span>
+                              <span className="text-gray-400">
+                                ({personaData.activityAnalysis?.totalCommits > 0 ? 
+                                  ((personaData.activityAnalysis.refactorCount / personaData.activityAnalysis.totalCommits) * 100).toFixed(0) : 0}%)
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+                              <span>Documentation</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{personaData.activityAnalysis?.docsCount}</span>
+                              <span className="text-gray-400">
+                                ({personaData.activityAnalysis?.totalCommits > 0 ? 
+                                  ((personaData.activityAnalysis.docsCount / personaData.activityAnalysis.totalCommits) * 100).toFixed(0) : 0}%)
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Activity Persona */}
+                      <div className="text-center p-4 bg-gray-700 rounded">
+                        <h4 className="text-lg font-semibold mb-2">{personaData.activityAnalysis?.activityPersona}</h4>
+                        <p className="text-sm text-gray-400 mb-2">
+                          {personaData.activityAnalysis?.activityPersona === "Bug Hunter" ? "You excel at finding and fixing issues" :
+                           personaData.activityAnalysis?.activityPersona === "Feature Developer" ? "You love building new functionality" :
+                           personaData.activityAnalysis?.activityPersona === "Code Gardener" ? "You keep codebases clean and healthy" :
+                           personaData.activityAnalysis?.activityPersona === "Documentation Champion" ? "You ensure code is well-documented" :
+                           "You maintain a balanced development approach"}
+                        </p>
+                        <div className="flex justify-center items-center gap-4">
+                          <div>
+                            <p className="text-sm text-gray-400">Confidence</p>
+                            <p className="font-bold text-blue-400">{personaData.activityAnalysis?.activityConfidence.toFixed(1)}%</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-400">Total Commits</p>
+                            <p className="font-bold">{personaData.activityAnalysis?.totalCommits}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Collaboration Analysis Card */}
+                  <Card className="bg-gray-800 border-gray-700 text-white">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <span className="text-2xl">👥</span>
+                        Collaboration Analysis
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                      {/* Collaboration Metrics */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center p-3 bg-gray-700 rounded">
+                          <p className="text-sm text-gray-400">Repositories</p>
+                          <p className="font-bold text-xl">{personaData.collaborationAnalysis?.reposContributedTo}</p>
+                        </div>
+                        <div className="text-center p-3 bg-gray-700 rounded">
+                          <p className="text-sm text-gray-400">PR Reviews</p>
+                          <p className="font-bold text-xl">{personaData.collaborationAnalysis?.prReviews}</p>
+                        </div>
+                        <div className="text-center p-3 bg-gray-700 rounded">
+                          <p className="text-sm text-gray-400">Comments</p>
+                          <p className="font-bold text-xl">{personaData.collaborationAnalysis?.prComments}</p>
+                        </div>
+                        <div className="text-center p-3 bg-gray-700 rounded">
+                          <p className="text-sm text-gray-400">Issues</p>
+                          <p className="font-bold text-xl">{personaData.collaborationAnalysis?.issuesCreated + personaData.collaborationAnalysis?.issuesClosed}</p>
+                        </div>
+                      </div>
+
+                      {/* Collaboration Persona */}
+                      <div className="text-center p-4 bg-gray-700 rounded">
+                        <h4 className="text-lg font-semibold mb-2">{personaData.collaborationAnalysis?.collaborationPersona}</h4>
+                        <p className="text-sm text-gray-400 mb-2">
+                          {personaData.collaborationAnalysis?.collaborationPersona === "Open Source Contributor" ? "You're active in the open source community" :
+                           personaData.collaborationAnalysis?.collaborationPersona === "Team Player" ? "You thrive in collaborative environments" :
+                           personaData.collaborationAnalysis?.collaborationPersona === "Solo Developer" ? "You prefer working independently" :
+                           "You maintain a collaborative development approach"}
+                        </p>
+                        <div className="flex justify-center">
+                          <div>
+                            <p className="text-sm text-gray-400">Confidence</p>
+                            <p className="font-bold text-purple-400">{personaData.collaborationAnalysis?.collaborationConfidence.toFixed(1)}%</p>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Persona Insights Card */}
+                  <Card className="bg-gray-800 border-gray-700 text-white">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <span className="text-2xl">🎭</span>
+                        Persona Insights
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="p-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 rounded-lg border border-purple-700/30">
+                        <h4 className="font-semibold mb-2">
+                          {personaData.timeAnalysis?.timePersona} + {personaData.collaborationAnalysis?.collaborationPersona}
+                        </h4>
+                        <p className="text-sm text-gray-300">
+                          {personaData.timeAnalysis?.timePersona === "Weekend Warrior" && personaData.collaborationAnalysis?.collaborationPersona === "Solo Developer" 
+                            ? "You're a passionate weekend coder who prefers working independently on personal projects. Your coding sessions peak on weekends, showing a clear preference for leisure-time programming."
+                            : "You have a unique combination of time management and collaboration styles that defines your development approach."}
+                        </p>
+                      </div>
+                      
+                      {personaData.activityAnalysis?.bugFixCount > personaData.activityAnalysis?.featureCount && (
+                        <div className="p-4 bg-gradient-to-r from-red-900/30 to-orange-900/30 rounded-lg border border-red-700/30">
+                          <h4 className="font-semibold mb-2">🐛 Bug Hunter Tendencies</h4>
+                          <p className="text-sm text-gray-300">
+                            {personaData.activityAnalysis?.bugFixCount} of your {personaData.activityAnalysis?.totalCommits} commits are bug fixes - you're excellent at problem-solving and maintaining code quality!
+                          </p>
+                        </div>
+                      )}
+
+                      {personaData.activityAnalysis?.featureCount > personaData.activityAnalysis?.bugFixCount && (
+                        <div className="p-4 bg-gradient-to-r from-green-900/30 to-teal-900/30 rounded-lg border border-green-700/30">
+                          <h4 className="font-semibold mb-2">✨ Feature Builder</h4>
+                          <p className="text-sm text-gray-300">
+                            You focus on building new functionality with {personaData.activityAnalysis?.featureCount} feature commits, showing a strong drive for innovation and growth.
+                          </p>
+                        </div>
+                      )}
+
+                      {personaData.collaborationAnalysis?.reposContributedTo > 10 && (
+                        <div className="p-4 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 rounded-lg border border-blue-700/30">
+                          <h4 className="font-semibold mb-2">🌍 Open Source Enthusiast</h4>
+                          <p className="text-sm text-gray-300">
+                            Contributing to {personaData.collaborationAnalysis?.reposContributedTo} repositories shows your commitment to the open source community!
+                          </p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Confidence Indicators */}
+                <Card className="bg-gray-800 border-gray-700 text-white mb-8">
+                  <CardHeader>
+                    <CardTitle>Analysis Confidence</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Time Analysis</span>
+                        <span className="font-semibold">{personaData.timeAnalysis?.timeConfidence.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="bg-green-500 h-2 rounded-full" style={{ width: `${personaData.timeAnalysis?.timeConfidence || 0}%` }}></div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Activity Analysis</span>
+                        <span className="font-semibold">{personaData.activityAnalysis?.activityConfidence.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${personaData.activityAnalysis?.activityConfidence || 0}%` }}></div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Collaboration Analysis</span>
+                        <span className="font-semibold">{personaData.collaborationAnalysis?.collaborationConfidence.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="bg-purple-500 h-2 rounded-full" style={{ width: `${personaData.collaborationAnalysis?.collaborationConfidence || 0}%` }}></div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="font-semibold">Overall Confidence</span>
+                        <span className="font-bold text-yellow-400">{personaData.confidence.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2">
+                        <div className="bg-yellow-500 h-2 rounded-full" style={{ width: `${personaData.confidence || 0}%` }}></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Key Statistics Summary */}
+                <Card className="bg-gray-800 border-gray-700 text-white">
+                  <CardHeader>
+                    <CardTitle>Key Statistics Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="text-center p-4 bg-gray-700 rounded">
+                        <p className="text-2xl font-bold text-green-400">{personaData.activityAnalysis?.totalCommits}</p>
+                        <p className="text-sm text-gray-400">Total Commits</p>
+                      </div>
+                      <div className="text-center p-4 bg-gray-700 rounded">
+                        <p className="text-2xl font-bold text-blue-400">
+                          {personaData.timeAnalysis?.peakHour === 0 ? "12 AM" :
+                           personaData.timeAnalysis?.peakHour === 12 ? "12 PM" :
+                           personaData.timeAnalysis?.peakHour > 12 ? `${personaData.timeAnalysis.peakHour - 12} PM` :
+                           `${personaData.timeAnalysis?.peakHour} AM`}
+                        </p>
+                        <p className="text-sm text-gray-400">Peak Hour</p>
+                      </div>
+                      <div className="text-center p-4 bg-gray-700 rounded">
+                        <p className="text-2xl font-bold text-purple-400">
+                          {personaData.timeAnalysis?.peakDay === 0 ? "Sunday" :
+                           personaData.timeAnalysis?.peakDay === 1 ? "Monday" :
+                           personaData.timeAnalysis?.peakDay === 2 ? "Tuesday" :
+                           personaData.timeAnalysis?.peakDay === 3 ? "Wednesday" :
+                           personaData.timeAnalysis?.peakDay === 4 ? "Thursday" :
+                           personaData.timeAnalysis?.peakDay === 5 ? "Friday" : "Saturday"}
+                        </p>
+                        <p className="text-sm text-gray-400">Peak Day</p>
+                      </div>
+                      <div className="text-center p-4 bg-gray-700 rounded">
+                        <p className="text-2xl font-bold text-yellow-400">{personaData.collaborationAnalysis?.reposContributedTo}</p>
+                        <p className="text-sm text-gray-400">Repositories</p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
