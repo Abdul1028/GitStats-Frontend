@@ -41,6 +41,7 @@ import { Tooltip as ReactTooltip } from 'react-tooltip'; // Import tooltip compo
 import 'react-calendar-heatmap/dist/styles.css'; // Import default heatmap styles
 import { signIn, signOut, useSession } from "next-auth/react";
 import DevDocsSection from '@/components/DevDocsSection';
+import AchievementDashboard from '@/components/AchievementDashboard';
 
 interface GitHubUser {
   login: string;
@@ -193,6 +194,8 @@ export default function Home() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [personaData, setPersonaData] = useState<any>(null); // State for persona analysis
+  const [achievementData, setAchievementData] = useState<any>(null); // State for achievement data
+  const [achievementLoading, setAchievementLoading] = useState<boolean>(false); // State for achievement loading
   const { data: sessionData, status } = useSession();
   const session = sessionData as SessionWithToken;
   const accessToken = session?.accessToken;
@@ -333,6 +336,9 @@ export default function Home() {
         setPersonaData(null);
       }
 
+      // Fetch achievements automatically after all other data is loaded
+      await fetchAchievements(fetchLoggedInUserData);
+
     } catch (err: any) {
       setError(err.message || 'Failed to fetch data.');
       console.error(err);
@@ -341,8 +347,57 @@ export default function Home() {
       setLanguageStats(null); // Clear stats on error
       setEvents([]); // Clear events on error
       setContributionData(null); // Clear on error
+      setPersonaData(null); // Clear persona data on error
+      setAchievementData(null); // Clear achievement data on error
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAchievements = async (fetchLoggedInUserData = false) => {
+    // Determine if we are fetching the logged-in user's data
+    const isFetchingSelf = fetchLoggedInUserData && loggedInUser;
+    
+    // Determine the target username
+    const targetUserLogin = isFetchingSelf ? loggedInUser.name || loggedInUser.email : username;
+
+    // Check if a target user is actually determined
+    if (!targetUserLogin) {
+      if (fetchLoggedInUserData) {
+        setError('You must be logged in to fetch your own achievements.');
+      } else {
+        setError('Please enter a GitHub username.');
+      }
+      return;
+    }
+
+    setAchievementLoading(true);
+    setError(null);
+    setAchievementData(null);
+
+    try {
+      // Fetch achievements based on authentication status
+      const achievementsUrl = isFetchingSelf 
+        ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/achievements`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/${targetUserLogin}/achievements`;
+      
+      const achievementsResponse = await fetch(achievementsUrl, {
+        headers: isFetchingSelf && accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+      });
+
+      if (achievementsResponse.ok) {
+        const achievementsDataJson = await achievementsResponse.json();
+        setAchievementData(achievementsDataJson);
+      } else {
+        console.warn(`Achievements fetch warning: Status ${achievementsResponse.status}`);
+        setAchievementData(null);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch achievements.');
+      console.error(err);
+      setAchievementData(null);
+    } finally {
+      setAchievementLoading(false);
     }
   };
 
@@ -1451,6 +1506,58 @@ export default function Home() {
                     </div>
                   </CardContent>
                 </Card>
+              </div>
+            )}
+
+            {/* --- Achievement Dashboard Section --- */}
+            {userData && (
+              <div className="mb-12 w-full max-w-7xl mx-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-semibold text-center flex-1">Developer Achievements</h2>
+                  <Button
+                    onClick={() => fetchAchievements(loggedInUser ? true : false)}
+                    disabled={achievementLoading}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                  >
+                    {achievementLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Loading...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">🏆</span>
+                        {achievementData ? 'Refresh Achievements' : 'Load Achievements'}
+                      </div>
+                    )}
+                  </Button>
+                </div>
+
+                {achievementData ? (
+                  <AchievementDashboard data={achievementData} username={userData.login} />
+                ) : !achievementLoading && (
+                  <Card className="bg-gray-800 border-gray-700 text-white text-center py-12">
+                    <CardContent>
+                      <div className="text-6xl mb-4">🏆</div>
+                      <h3 className="text-xl font-semibold mb-2">Unlock Your Developer Achievements</h3>
+                      <p className="text-gray-400 mb-4">
+                        Discover badges and achievements based on your GitHub activity, coding patterns, and contributions.
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Click "Load Achievements" to see your progress across different categories.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {achievementLoading && (
+                  <Card className="bg-gray-800 border-gray-700 text-white text-center py-12">
+                    <CardContent>
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+                      <p className="text-gray-400">Analyzing your GitHub activity for achievements...</p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             )}
 
