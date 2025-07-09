@@ -1650,9 +1650,9 @@ export default function Home() {
                 {languageChartData.length > 0 && (
                   <div className="w-full">
                     <h2 className="text-2xl font-semibold mb-4 text-center">Language Usage</h2>
-                    <Card className="bg-gray-800 border-gray-700 text-white p-4 flex flex-col items-center">
-                      <CardContent className="w-full p-0 mt-4">
-                        <div className="flex flex-row w-full h-[300px] aspect-square mx-auto">
+                      <Card className="bg-gray-800 border-gray-700 text-white p-4 flex flex-col items-center">
+                        <CardContent className="w-full p-0 mt-4">
+                          <div className="flex flex-row w-full h-[300px] aspect-square mx-auto">
                           {/* Legend: left half (hide on small screens) */}
                           {!isSmallScreen && (
                             <div
@@ -1696,37 +1696,37 @@ export default function Home() {
                           )}
                           {/* Chart: right half or full width on small screens */}
                           <div className={`${isSmallScreen ? "w-full" : "w-1/2"} h-full flex items-center justify-center`}>
-                            <ChartContainer config={languageChartConfig} className="w-full h-full">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                  <ChartTooltip
-                                    cursor={false}
-                                    content={<ChartTooltipContent indicator="dot" hideLabel />}
-                                  />
-                                  <Pie
-                                    data={languageChartData}
-                                    dataKey="count"
-                                    nameKey="language"
-                                    cx="50%"
-                                    cy="50%"
-                                    outerRadius={90}
-                                    innerRadius={50}
-                                    strokeWidth={2}
-                                    activeShape={({ outerRadius = 0, ...props }: any) => (
-                                      <Sector {...props} outerRadius={outerRadius + 6} />
-                                    )}
-                                  >
-                                    {languageChartData.map((entry) => (
-                                      <Cell key={`cell-${entry.language}`} fill={entry.fill} name={entry.language}/>
-                                    ))}
-                                  </Pie>
-                                </PieChart>
-                              </ResponsiveContainer>
-                            </ChartContainer>
+                              <ChartContainer config={languageChartConfig} className="w-full h-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <PieChart>
+                                    <ChartTooltip
+                                      cursor={false}
+                                      content={<ChartTooltipContent indicator="dot" hideLabel />}
+                                    />
+                                    <Pie
+                                      data={languageChartData}
+                                      dataKey="count"
+                                      nameKey="language"
+                                      cx="50%"
+                                      cy="50%"
+                                      outerRadius={90}
+                                      innerRadius={50}
+                                      strokeWidth={2}
+                                      activeShape={({ outerRadius = 0, ...props }: any) => (
+                                        <Sector {...props} outerRadius={outerRadius + 6} />
+                                      )}
+                                    >
+                                      {languageChartData.map((entry) => (
+                                        <Cell key={`cell-${entry.language}`} fill={entry.fill} name={entry.language}/>
+                                      ))}
+                                    </Pie>
+                                  </PieChart>
+                                </ResponsiveContainer>
+                              </ChartContainer>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
                   </div>
                 )}
                 {/* Top Repositories by Stars */}
@@ -1825,40 +1825,40 @@ export default function Home() {
                           <div className="flex flex-row w-full h-[300px] aspect-square mx-auto">
                             {/* Legend: left half (hide on small screens) */}
                             {!isSmallScreen && (
-                              <div className="w-1/2 h-full flex items-center justify-center md:w-1/2 w-full md:static absolute top-0 left-0 z-10">
-                                <div className="chart-legend-scroll p-2 bg-transparent rounded-md w-full max-w-xs">
-                                  {eventTypeChartData.map((entry) => (
-                                    <div
-                                      key={entry.type}
-                                      className="flex items-start gap-2 px-1 py-0.5 rounded transition-colors hover:bg-gray-700/40 cursor-pointer"
-                                      data-tooltip-id="event-legend-tooltip"
-                                      data-tooltip-content={entry.type}
+                            <div className="w-1/2 h-full flex items-center justify-center md:w-1/2 w-full md:static absolute top-0 left-0 z-10">
+                              <div className="chart-legend-scroll p-2 bg-transparent rounded-md w-full max-w-xs">
+                                {eventTypeChartData.map((entry) => (
+                                  <div
+                                    key={entry.type}
+                                    className="flex items-start gap-2 px-1 py-0.5 rounded transition-colors hover:bg-gray-700/40 cursor-pointer"
+                                    data-tooltip-id="event-legend-tooltip"
+                                    data-tooltip-content={entry.type}
+                                  >
+                                    <span
+                                      style={{
+                                        display: 'inline-block',
+                                        width: 18,
+                                        height: 18,
+                                        borderRadius: 4,
+                                        background: entry.fill,
+                                        border: '2px solid #222',
+                                        flexShrink: 0,
+                                      }}
+                                    />
+                                    <span
+                                      className="text-gray-200 text-base font-medium whitespace-nowrap"
+                                      style={{ lineHeight: '1.2' }}
                                     >
-                                      <span
-                                        style={{
-                                          display: 'inline-block',
-                                          width: 18,
-                                          height: 18,
-                                          borderRadius: 4,
-                                          background: entry.fill,
-                                          border: '2px solid #222',
-                                          flexShrink: 0,
-                                        }}
-                                      />
-                                      <span
-                                        className="text-gray-200 text-base font-medium whitespace-nowrap"
-                                        style={{ lineHeight: '1.2' }}
-                                      >
-                                        {entry.type}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                                <ReactTooltip
-                                  id="event-legend-tooltip"
-                                  place="top"
-                                />
+                                      {entry.type}
+                                    </span>
+                                  </div>
+                                ))}
                               </div>
+                              <ReactTooltip
+                                id="event-legend-tooltip"
+                                place="top"
+                              />
+                            </div>
                             )}
                             {/* Chart: right half or full width on small screens */}
                             <div className={`${isSmallScreen ? "w-full" : "w-1/2"} h-full flex items-center justify-center`}>
