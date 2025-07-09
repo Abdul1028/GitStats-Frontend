@@ -204,6 +204,14 @@ export default function Home() {
   const isSmallScreen = useIsSmallScreen();
 
   console.log("hey: ",process.env.NEXT_PUBLIC_BACKEND_URL)
+  useEffect(() => {
+    if (session?.accessToken) {
+      console.log("🔐 GitHub Access Token:", session.accessToken);
+    } else {
+      console.log("⚠️ No access token found in session.");
+    }
+  }, [session]);
+  
 
   const fetchData = async (fetchLoggedInUserData = false) => {
     
